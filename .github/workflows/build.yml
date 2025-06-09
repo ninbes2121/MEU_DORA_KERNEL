@@ -283,6 +283,7 @@ jobs:
       - name: Create Flashable Both Image
         if: github.event.inputs.BUILD_TARGET == 'Both'
         run: |
+          DEVICE="${{ matrix.device }}"
           ZIP_NAME="DoraCore-${DEVICE}-5.10-A12-${BUILD_DATE}.zip"
           cd $GITHUB_WORKSPACE/android-kernel/AnyKernel3
           zip -r9 "$ZIP_NAME" *
