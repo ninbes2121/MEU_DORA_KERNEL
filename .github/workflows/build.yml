@@ -58,10 +58,6 @@ on:
         description: 'AnyKernel3 Git'
         required: true
         default: 'https://github.com/dopaemon/Anykernel3.git'
-      ANYKERNEL_BRANCH:
-        description: 'AnyKernel3 Branch'
-        required: true
-        default: 'master'
       RELEASE:
         description: 'Status Release'
         required: true
@@ -169,6 +165,7 @@ jobs:
 
       - name: Build Environment
         run: |
+          TARGET="${{ github.event.inputs.BUILD_TARGET }}"
           echo "BUILD_DATE=$(TZ=Asia/Ho_Chi_Minh date +'%Y-%m%d-%H%M')" >> $GITHUB_ENV
           cd $GITHUB_WORKSPACE
           sudo apt-get update
@@ -189,7 +186,11 @@ jobs:
           git clone -b ${{ github.event.inputs.KERNEL_BRANCH }} --recurse-submodules -j$(nproc --all) --depth=1 --single-branch ${{ github.event.inputs.KERNEL_GIT }} ./common
           git clone -b lineage-22.2 --single-branch --depth=1 https://github.com/cupid-development/android_kernel_xiaomi_sm8450-modules sm8450-modules
           git clone -b lineage-22.2 --single-branch --depth=1 https://github.com/cupid-development/android_kernel_xiaomi_sm8450-devicetrees sm8450-devicetrees
-          git clone -b ${{ github.event.inputs.ANYKERNEL_BRANCH }} --depth=1 --single-branch ${{ github.event.inputs.ANYKERNEL_GIT }} ./AnyKernel3
+          if [ "$TARGET" != "Both" ]; then
+             git clone -b master --depth=1 --single-branch ${{ github.event.inputs.ANYKERNEL_GIT }} ./AnyKernel3
+          else
+             git clone -b volume --depth=1 --single-branch ${{ github.event.inputs.ANYKERNEL_GIT }} ./AnyKernel3
+          fi
           rm -rf ./AnyKernel3/.git
 
       - name: Build Selected Devices KSU
@@ -197,6 +198,8 @@ jobs:
         run: |
           set -e
           DEVICE="${{ matrix.device }}"
+          TARGET="${{ github.event.inputs.BUILD_TARGET }}"
+          ZIP_NAME=""
 
           cd $GITHUB_WORKSPACE/android-kernel
           cd ./common/
@@ -231,18 +234,24 @@ jobs:
           cd ../
           CC='ccache' LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh -j$(nproc --all)
 
-          # Make flashable ZIP
-          ZIP_NAME="DoraCore-${DEVICE}-KSU-5.10-A12-${BUILD_DATE}.zip"
-          cd $GITHUB_WORKSPACE/android-kernel/AnyKernel3
-          cp -f $GITHUB_WORKSPACE/android-kernel/out/android12-5.10/dist/Image ./Image
-          zip -r9 "$ZIP_NAME" *
-          mv "$ZIP_NAME" $GITHUB_WORKSPACE/
+          if [ "$TARGET" != "Both" ]; then
+             ZIP_NAME="DoraCore-${DEVICE}-KSU-5.10-A12-${BUILD_DATE}.zip"
+             cd $GITHUB_WORKSPACE/android-kernel/AnyKernel3
+             cp -r $GITHUB_WORKSPACE/android-kernel/out/android12-5.10/dist/Image ./Image
+             zip -r9 "$ZIP_NAME" *
+             mv "$ZIP_NAME" $GITHUB_WORKSPACE/
+          else
+             cd $GITHUB_WORKSPACE/android-kernel/AnyKernel3
+             cp -r $GITHUB_WORKSPACE/android-kernel/out/android12-5.10/dist/Image ./Image-kernelsu
+          fi
 
       - name: Build Selected Devices NonKSU
         if: github.event.inputs.BUILD_TARGET == 'NonKSU' || github.event.inputs.BUILD_TARGET == 'Both'
         run: |
           set -e
           DEVICE="${{ matrix.device }}"
+          TARGET="${{ github.event.inputs.BUILD_TARGET }}"
+          ZIP_NAME=""
 
           cd $GITHUB_WORKSPACE/android-kernel
           cd ./common/
@@ -260,10 +269,22 @@ jobs:
           cd ../
           CC='ccache' LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh -j$(nproc --all)
 
-          # Make flashable ZIP
-          ZIP_NAME="DoraCore-${DEVICE}-NonKSU-5.10-A12-${BUILD_DATE}.zip"
+          if [ "$TARGET" != "Both" ]; then
+             ZIP_NAME="DoraCore-${DEVICE}-NonKSU-5.10-A12-${BUILD_DATE}.zip"
+             cd $GITHUB_WORKSPACE/android-kernel/AnyKernel3
+             cp -r $GITHUB_WORKSPACE/android-kernel/out/android12-5.10/dist/Image ./Image
+             zip -r9 "$ZIP_NAME" *
+             mv "$ZIP_NAME" $GITHUB_WORKSPACE/
+          else
+             cd $GITHUB_WORKSPACE/android-kernel/AnyKernel3
+             cp -r $GITHUB_WORKSPACE/android-kernel/out/android12-5.10/dist/Image ./Image-standard
+          fi
+
+      - name: Create Flashable Both Image
+        if: github.event.inputs.BUILD_TARGET == 'Both'
+        run: |
+          ZIP_NAME="DoraCore-${DEVICE}-5.10-A12-${BUILD_DATE}.zip"
           cd $GITHUB_WORKSPACE/android-kernel/AnyKernel3
-          cp -f $GITHUB_WORKSPACE/android-kernel/out/android12-5.10/dist/Image ./Image
           zip -r9 "$ZIP_NAME" *
           mv "$ZIP_NAME" $GITHUB_WORKSPACE/
 
