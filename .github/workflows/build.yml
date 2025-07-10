@@ -204,7 +204,7 @@ jobs:
       - name: Clone Clang if cache missed
         if: steps.cache-clang.outputs.cache-hit != 'true'
         run: |
-          git clone -b ${{ github.event.inputs.CLANG_BRANCH }} --depth=1 --single-branch ${{ github.event.inputs.CLANG_PREBUILT }} prebuilts-master/clang/host/linux-x86/clang-r416183b
+          git clone -b ${{ github.event.inputs.CLANG_BRANCH }} --depth=1 --single-branch ${{ github.event.inputs.CLANG_PREBUILT }} $GITHUB_WORKSPACE/android-kernel/prebuilts-master/clang/host/linux-x86/clang-r416183b
 
       - name: Set up ccache
         run: |
