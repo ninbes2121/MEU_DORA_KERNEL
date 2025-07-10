@@ -179,7 +179,9 @@ jobs:
           repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
           git clone -b build --single-branch https://github.com/dopaemon/android_kernel_xiaomi_common.git build
           rm -rf .git .github .repo common
+
           git clone -b ${{ github.event.inputs.CLANG_BRANCH }} --depth=1 --single-branch ${{ github.event.inputs.CLANG_PREBUILT }} prebuilts-master/clang/host/linux-x86/clang-r416183b
+
           rm -rf ./build/_setup_env.sh
           wget -O ./build/_setup_env.sh https://raw.githubusercontent.com/dopaemon/android_kernel_xiaomi_common/refs/heads/master/.github/scripts/_setup_env.sh
           chmod +x ./build/_setup_env.sh
@@ -192,6 +194,20 @@ jobs:
              git clone -b volume --depth=1 --single-branch ${{ github.event.inputs.ANYKERNEL_GIT }} ./AnyKernel3
           fi
           rm -rf ./AnyKernel3/.git
+
+      - name: Cache Clang
+        id: cache-clang
+        uses: actions/cache@v4
+        with:
+          path: android-kernel/prebuilts-master/clang/host/linux-x86/clang-r416183b
+          key: clang-${{ github.event.inputs.CLANG_BRANCH }}
+          restore-keys: |
+            clang-
+
+      - name: Clone Clang if cache missed
+        if: steps.cache-clang.outputs.cache-hit != 'true'
+        run: |
+          git clone -b ${{ github.event.inputs.CLANG_BRANCH }} --depth=1 --single-branch ${{ github.event.inputs.CLANG_PREBUILT }} prebuilts-master/clang/host/linux-x86/clang-r416183b
 
       - name: Set up ccache
         run: |
