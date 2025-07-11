@@ -192,9 +192,6 @@ jobs:
           fi
           rm -rf ./AnyKernel3/.git
 
-      - name: Boost file descriptor limit
-        run: ulimit -n 1048576
-
       - name: Cache Clang
         id: cache-clang
         uses: actions/cache@v4
