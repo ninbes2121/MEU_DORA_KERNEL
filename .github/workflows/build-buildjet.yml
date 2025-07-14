@@ -206,7 +206,7 @@ jobs:
         if: steps.cache-clang.outputs.cache-hit != 'true'
         run: |
           GIT_CLONE_PROTECTION_ACTIVE=false
-          git clone -b ${{ github.event.inputs.CLANG_BRANCH }} --depth=1 --single-branch ${{ github.event.inputs.CLANG_PREBUILT }} $GITHUB_WORKSPACE/android-kernel/prebuilts-master/clang/host/linux-x86/clang-r416183b
+          git -c core.hooksPath=/dev/null clone -b ${{ github.event.inputs.CLANG_BRANCH }} --depth=1 --single-branch ${{ github.event.inputs.CLANG_PREBUILT }} $GITHUB_WORKSPACE/android-kernel/prebuilts-master/clang/host/linux-x86/clang-r416183b
 
       - name: Set up ccache
         run: |
