@@ -146,7 +146,7 @@ jobs:
 
   build:
     needs: [create_release, set-matrix]
-    runs-on: buildjet-64vcpu-ubuntu-2204
+    runs-on: buildjet-32vcpu-ubuntu-2204
 
     strategy:
       matrix:
