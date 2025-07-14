@@ -1,4 +1,4 @@
-name: DoraCore Kernel Build | Github Action
+name: DoraCore Kernel Build | BuildJet
 
 on:
   workflow_dispatch:
