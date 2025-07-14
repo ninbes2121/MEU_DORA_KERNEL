@@ -1,4 +1,4 @@
-name: DoraCore Kernel Build
+name: DoraCore Kernel Build | Github Action
 
 on:
   workflow_dispatch:
